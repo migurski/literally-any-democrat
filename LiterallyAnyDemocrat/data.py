@@ -4,25 +4,28 @@ import unittest, httmock
 # Ballotpedia conventionally uses an '(i)' next to candidate names
 IMARK = ' (i)'
 
-Candidate = collections.namedtuple('Candidate', ('name', 'incumbent'))
+Person = collections.namedtuple('Person', ('name', 'incumbent'))
+
+Candidate = collections.namedtuple('Candidate',
+    ('state', 'chamber', 'district', 'name', 'incumbent'))
 
 State = collections.namedtuple('State', ('state', 'chamber', 'reason',
     'filing_deadline', 'primary_election', 'weight', 'detail_url'))
 
 class TestData (unittest.TestCase):
     
-    def test_parse_candidates(self):
-        c1 = parse_candidates('Bill Brannon')
-        self.assertEqual(c1, [('Bill Brannon', None)])
+    def test_parse_persons(self):
+        p1 = parse_persons('Bill Brannon')
+        self.assertEqual(p1, [('Bill Brannon', None)])
 
-        c2 = parse_candidates("Janet Dudding\nRaza Rahman")
-        self.assertEqual(c2, [('Janet Dudding', None), ('Raza Rahman', None)])
+        p2 = parse_persons("Janet Dudding\nRaza Rahman")
+        self.assertEqual(p2, [('Janet Dudding', None), ('Raza Rahman', None)])
 
-        c3 = parse_candidates('Joe Deshotel (i)')
-        self.assertEqual(c3, [('Joe Deshotel', True)])
+        p3 = parse_persons('Joe Deshotel (i)')
+        self.assertEqual(p3, [('Joe Deshotel', True)])
 
-        c4 = parse_candidates("Ron Reynolds (i)\nByron Ross\n")
-        self.assertEqual(c4, [('Ron Reynolds', True), ('Byron Ross', None)])
+        p4 = parse_persons("Ron Reynolds (i)\nByron Ross\n")
+        self.assertEqual(p4, [('Ron Reynolds', True), ('Byron Ross', None)])
     
     def test_parse_date(self):
         d1 = parse_date('December 9, 2019')
@@ -56,12 +59,48 @@ class TestData (unittest.TestCase):
         self.assertEqual(state.primary_election, datetime.date(2020, 3, 3))
         self.assertEqual(state.weight, 191333)
         self.assertEqual(state.detail_url, 'https://ballotpedia.org/Texas_House_of_Representatives_elections,_2020')
+    
+    def test_load_candidates(self):
+        def mock_requests(url, request):
+            return b'State,Chamber,Reason,Primary Election,District,Democratic Candidate(s),Incumbent\nTexas,House of Representatives,Redistricting,"March 3, 2020",27,"Ron Reynolds (i)\nByron Ross",Yes\nTexas,House of Representatives,Redistricting,"March 3, 2020",28,Elizabeth Markowitz,No\nTexas,House of Representatives,Redistricting,"March 3, 2020",29,Travis Boldt,No\nTexas,House of Representatives,Redistricting,"March 3, 2020",31,Ryan Guillen (i),Yes\n'
+    
+        with httmock.HTTMock(mock_requests):
+            candidates = load_candidates('http://example.com/candidates')
+        
+        self.assertEqual(len(candidates), 5)
+        
+        c1 = candidates[0]
+        self.assertEqual(c1.state, 'Texas')
+        self.assertEqual(c1.chamber, 'House of Representatives')
+        self.assertEqual(c1.district, 27)
+        self.assertEqual(c1.name, 'Ron Reynolds')
+        self.assertTrue(c1.incumbent, True)
+        
+        c2 = candidates[1]
+        self.assertEqual(c2.district, 27)
+        self.assertEqual(c2.name, 'Byron Ross')
+        self.assertIsNone(c2.incumbent)
+        
+        c3 = candidates[2]
+        self.assertEqual(c3.district, 28)
+        self.assertEqual(c3.name, 'Elizabeth Markowitz')
+        self.assertIsNone(c3.incumbent)
+        
+        c4 = candidates[3]
+        self.assertEqual(c4.district, 29)
+        self.assertEqual(c4.name, 'Travis Boldt')
+        self.assertIsNone(c4.incumbent)
+        
+        c5 = candidates[4]
+        self.assertEqual(c5.district, 31)
+        self.assertEqual(c5.name, 'Ryan Guillen')
+        self.assertTrue(c5.incumbent)
 
-def parse_candidates(cell):
-    ''' Return a list of Candidates for a cell value
+def parse_persons(cell):
+    ''' Return a list of Persons for a cell value
     '''
     names = cell.split('\n')
-    return [Candidate(name.replace(IMARK, ''), True if (IMARK in name) else None)
+    return [Person(name.replace(IMARK, ''), True if (IMARK in name) else None)
         for name in names if name.strip()]
 
 def parse_date(cell):
@@ -89,3 +128,21 @@ def load_states(url):
             )
         for row in rows
         }
+
+def load_candidates(url):
+    '''
+    '''
+    got = requests.get(url)
+    text = io.StringIO(got.text)
+    rows = csv.DictReader(text, dialect='excel')
+    
+    candidates = []
+    
+    for row in rows:
+        for person in parse_persons(row['Democratic Candidate(s)']):
+            candidates.append(Candidate(
+                row['State'], row['Chamber'], parse_number(row['District']),
+                person.name, person.incumbent
+                ))
+    
+    return candidates
