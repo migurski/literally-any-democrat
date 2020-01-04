@@ -1,0 +1,141 @@
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="//writ.cmcenroe.me/1.0.4/writ.min.css">
+<style>
+    body { margin: 4em 15% }
+    a { white-space: nowrap }
+</style>
+</head>
+<body>
+
+<h3>Literally Any Democrat in 2020</h3>
+<p>
+    So many Democrats are running for office in 2020! You can help take back
+    the U.S. Senate or help fix legislature-controlled partisan gerrymandering
+    by supporting these candidates throughout the year, but how should you
+    pick one to support? Let us help you pick literally any Democrat at random.
+</p>
+
+<section id="candidate">
+    <h1>
+        <span id="name1">Joe Blow</span>
+        is <span id="verb"></span>
+        for <span id="race">Parliament</span>.
+    </h1>
+    
+    <h2>
+        📅 The <span id="election">general election is November 2020</span>,
+        <a id="link" href="#" target="blank">support <span id="name2">Joe Blow</a> 💰
+    </h2>
+</section>
+
+<p>
+    Reload this page to randomly pick someone else.
+</p>
+
+<script language="javascript">
+
+    var request = new XMLHttpRequest();
+    request.open('GET', '{{candidates_url}}', true);
+
+    request.onload = function()
+    {
+        if(request.status >= 200 && request.status < 400)
+        {
+            // Returns a dict with head and rows lists
+            var data = JSON.parse(request.responseText);
+            pick_random_candidate(make_candidate_dicts(data['head'], data['rows']));
+            return;
+        }
+    };
+
+    request.onerror = function() { /* There was a connection error of some sort */ };
+    request.send();
+    
+    function make_candidate_dicts(head, rows)
+    {
+        var dicts = [], cumulative_weight = 0;
+        
+        for(var i = 0; i < rows.length; i++)
+        {
+            dicts.push({});
+
+            for(var j = 0; j < head.length; j++)
+            {
+                dicts[i][head[j]] = rows[i][j];
+            }
+            
+            if(dicts[i].incumbent)
+            {
+                // return incumbents half as frequently
+                dicts[i].weight /= 2;
+                
+                // scale logarithmically so big state Senate races don't dominate
+                dicts[i].weight = Math.log(dicts[i].weight);
+            }
+            
+            dicts[i].filing_deadline = new Date(dicts[i].filing_deadline);
+            dicts[i].primary_election = new Date(dicts[i].primary_election);
+            dicts[i].cumulative_weight = cumulative_weight + dicts[i].weight;
+            cumulative_weight = dicts[i].cumulative_weight;
+        }
+        
+        console.log('Cumulative weight:', cumulative_weight);
+        return dicts;
+    }
+    
+    function pick_random_candidate(candidates)
+    {
+        console.log('Loaded candidates:', candidates.length);
+        
+        var total_weight = candidates[candidates.length - 1].cumulative_weight,
+            random_cutoff = Math.random() * total_weight;
+        
+        for(var i = 0; i < candidates.length; i++)
+        {
+            if(candidates[i].cumulative_weight > random_cutoff)
+            {
+                return show_candidate(candidates[i]);
+            }
+        }
+    }
+    
+    function show_candidate(candidate)
+    {
+        console.log('Random candidate:', candidate.name, candidate);
+        document.getElementById('name1').innerHTML = candidate.name;
+        document.getElementById('name2').innerHTML = candidate.name;
+        
+        if(candidate.incumbent) {
+            document.getElementById('verb').innerHTML = 'running as an incumbent';
+
+        } else {
+            document.getElementById('verb').innerHTML = 'seeking their first term';
+        }
+        
+        if((new Date()) < candidate.primary_election)
+        {
+            document.getElementById('election').innerHTML = ['primary election is coming up',
+                candidate.primary_election.toLocaleDateString()].join(' ');
+        }
+        
+        var phrase = ['the', candidate.state, candidate.chamber, 'in District', candidate.district].join(' '),
+            search = [candidate.name, candidate.state, candidate.chamber, 'District', candidate.district].join(' ');
+        
+        if(candidate.chamber == 'U.S. Senate')
+        {
+            phrase = ['the', candidate.chamber, 'in', candidate.state].join(' ');
+            search = [candidate.name, candidate.chamber, candidate.state].join(' ');
+        }
+
+        document.getElementById('race').innerHTML = phrase;
+        document.getElementById('link').href = 'https://www.google.com/search?q=' + escape(search);
+        document.getElementById('candidate').style.display = 'block';
+    }
+
+</script>
+
+</body>
+</html>

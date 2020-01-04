@@ -8,6 +8,10 @@ CANDIDATES = data.load_candidates(os.environ['CANDIDATES_CSV_URL'])
 
 @app.route('/')
 def get_index():
+    return flask.render_template('index.html', candidates_url=flask.url_for('get_candidates_json'))
+
+@app.route('/candidates.json')
+def get_candidates_json():
     a_candidate = CANDIDATES[0]
     a_state = STATES[(a_candidate.state, a_candidate.chamber)]
 
