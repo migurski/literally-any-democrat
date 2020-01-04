@@ -71,10 +71,10 @@
             {
                 // return incumbents half as frequently
                 dicts[i].weight /= 2;
-                
-                // scale logarithmically so big state Senate races don't dominate
-                dicts[i].weight = Math.log(dicts[i].weight);
             }
+            
+            // scale logarithmically so big state Senate races don't dominate
+            dicts[i].weight = Math.log(dicts[i].weight);
             
             dicts[i].filing_deadline = new Date(dicts[i].filing_deadline);
             dicts[i].primary_election = new Date(dicts[i].primary_election);
