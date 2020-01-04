@@ -62,19 +62,19 @@ class TestData (unittest.TestCase):
     
     def test_load_candidates(self):
         def mock_requests(url, request):
-            return b'State,Chamber,Reason,Primary Election,District,Democratic Candidate(s),Incumbent\nTexas,House of Representatives,Redistricting,"March 3, 2020",27,"Ron Reynolds (i)\nByron Ross",Yes\nTexas,House of Representatives,Redistricting,"March 3, 2020",28,Elizabeth Markowitz,No\nTexas,House of Representatives,Redistricting,"March 3, 2020",29,Travis Boldt,No\nTexas,House of Representatives,Redistricting,"March 3, 2020",31,Ryan Guillen (i),Yes\n'
+            return b'State,Chamber,Reason,Primary Election,District,Democratic Candidate(s),Incumbent\nTexas,House of Representatives,Redistricting,"March 3, 2020",27,"Ron Reynolds (i)\nByron Ross",Yes\nTexas,House of Representatives,Redistricting,"March 3, 2020",28,Elizabeth Markowitz,No\nTexas,House of Representatives,Redistricting,"March 3, 2020",29,Travis Boldt,No\nTexas,House of Representatives,Redistricting,"March 3, 2020",31,Ryan Guillen (i),Yes\nNorth Carolina,U.S. Senate,Senate Control,"March 3, 2020",,Cal Cunningham,No\n'
     
         with httmock.HTTMock(mock_requests):
             candidates = load_candidates('http://example.com/candidates')
         
-        self.assertEqual(len(candidates), 5)
+        self.assertEqual(len(candidates), 6)
         
         c1 = candidates[0]
         self.assertEqual(c1.state, 'Texas')
         self.assertEqual(c1.chamber, 'House of Representatives')
         self.assertEqual(c1.district, 27)
         self.assertEqual(c1.name, 'Ron Reynolds')
-        self.assertTrue(c1.incumbent, True)
+        self.assertTrue(c1.incumbent)
         
         c2 = candidates[1]
         self.assertEqual(c2.district, 27)
@@ -95,6 +95,13 @@ class TestData (unittest.TestCase):
         self.assertEqual(c5.district, 31)
         self.assertEqual(c5.name, 'Ryan Guillen')
         self.assertTrue(c5.incumbent)
+        
+        c6 = candidates[5]
+        self.assertEqual(c6.state, 'North Carolina')
+        self.assertEqual(c6.chamber, 'U.S. Senate')
+        self.assertIsNone(c6.district)
+        self.assertEqual(c6.name, 'Cal Cunningham')
+        self.assertIsNone(c6.incumbent)
 
 def parse_persons(cell):
     ''' Return a list of Persons for a cell value
@@ -141,7 +148,8 @@ def load_candidates(url):
     for row in rows:
         for person in parse_persons(row['Democratic Candidate(s)']):
             candidates.append(Candidate(
-                row['State'], row['Chamber'], parse_number(row['District']),
+                row['State'], row['Chamber'],
+                parse_number(row['District']) if row['District'] else None,
                 person.name, person.incumbent
                 ))
     
