@@ -1,4 +1,5 @@
-import flask
+import os, flask, requests
+from . import data
 
 app = flask.Flask(__name__)
 
