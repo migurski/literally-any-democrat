@@ -16,7 +16,7 @@ def get_candidates_json():
     a_state = STATES[(a_candidate.state, a_candidate.chamber)]
 
     return flask.jsonify({
-        'head': list(a_candidate._fields) + list(a_state._fields),
+        'head': list(a_candidate._fields) + list(a_state._fields[2:-1]),
         'rows': [
-        list(c) + list(STATES[(c.state, c.chamber)]) for c in CANDIDATES
+        list(c) + list(STATES[(c.state, c.chamber)][2:-1]) for c in CANDIDATES
         ]})

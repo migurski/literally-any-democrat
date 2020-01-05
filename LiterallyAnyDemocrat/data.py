@@ -4,6 +4,9 @@ import unittest, httmock
 # Ballotpedia conventionally uses an '(i)' next to candidate names
 IMARK = ' (i)'
 
+# Westernmost timezone
+TZ = datetime.timezone(datetime.timedelta(hours=-12))
+
 Person = collections.namedtuple('Person', ('name', 'incumbent'))
 
 Candidate = collections.namedtuple('Candidate',
@@ -29,13 +32,13 @@ class TestData (unittest.TestCase):
     
     def test_parse_date(self):
         d1 = parse_date('December 9, 2019')
-        self.assertEqual(d1, datetime.date(2019, 12, 9))
+        self.assertEqual(d1.date(), datetime.date(2019, 12, 9))
 
         d2 = parse_date('March 3, 2020')
-        self.assertEqual(d2, datetime.date(2020, 3, 3))
+        self.assertEqual(d2.date(), datetime.date(2020, 3, 3))
 
         d3 = parse_date('August 18, 2020')
-        self.assertEqual(d3, datetime.date(2020, 8, 18))
+        self.assertEqual(d3.date(), datetime.date(2020, 8, 18))
     
     def test_parse_number(self):
         self.assertEqual(parse_number('14,350,000'), 14350000)
@@ -55,8 +58,8 @@ class TestData (unittest.TestCase):
         self.assertEqual(state.state, 'Texas')
         self.assertEqual(state.chamber, 'House of Representatives')
         self.assertEqual(state.reason, 'Redistricting')
-        self.assertEqual(state.filing_deadline, datetime.date(2019, 12, 9))
-        self.assertEqual(state.primary_election, datetime.date(2020, 3, 3))
+        self.assertEqual(state.filing_deadline.date(), datetime.date(2019, 12, 9))
+        self.assertEqual(state.primary_election.date(), datetime.date(2020, 3, 3))
         self.assertEqual(state.weight, 191333)
         self.assertEqual(state.detail_url, 'https://ballotpedia.org/Texas_House_of_Representatives_elections,_2020')
     
@@ -138,7 +141,7 @@ def parse_persons(cell):
 def parse_date(cell):
     ''' Return a datetime.date object for a cell value
     '''
-    return datetime.datetime.strptime(cell, '%B %d, %Y').date()
+    return datetime.datetime.strptime(cell, '%B %d, %Y').replace(tzinfo=TZ)
 
 def parse_number(cell):
     '''
