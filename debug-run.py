@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import dotenv; dotenv.load_dotenv(verbose=True)
 import LiterallyAnyDemocrat
 
 LiterallyAnyDemocrat.app.jinja_env.auto_reload = True

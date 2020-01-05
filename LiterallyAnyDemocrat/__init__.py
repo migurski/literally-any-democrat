@@ -1,6 +1,7 @@
-import os, flask, requests
+import os, flask, requests, dotenv
 from . import data
 
+dotenv.load_dotenv(verbose=True)
 app = flask.Flask(__name__)
 
 STATES = data.load_states(os.environ['STATES_CSV_URL'])
