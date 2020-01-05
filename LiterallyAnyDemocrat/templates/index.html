@@ -1,11 +1,11 @@
 <html>
 <head>
+<title>Literally Any Democrat 2020</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="//writ.cmcenroe.me/1.0.4/writ.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='writ.min.css') }}">
 <style>
     body { margin: 4em 15% }
-    a { white-space: nowrap }
 </style>
 </head>
 <body>
@@ -24,6 +24,10 @@
         is <span id="verb"></span>
         for <span id="race">Parliament</span>.
     </h1>
+    
+    <p id="reason">
+        
+    </p>
     
     <h2>
         📅 The <span id="election">general election is November 2020</span>,
@@ -67,14 +71,14 @@
                 dicts[i][head[j]] = rows[i][j];
             }
             
+            // scale logarithmically so big state Senate races don't dominate
+            dicts[i].weight = Math.log(dicts[i].weight);
+            
             if(dicts[i].incumbent)
             {
                 // return incumbents half as frequently
                 dicts[i].weight /= 2;
             }
-            
-            // scale logarithmically so big state Senate races don't dominate
-            dicts[i].weight = Math.log(dicts[i].weight);
             
             dicts[i].filing_deadline = new Date(dicts[i].filing_deadline);
             dicts[i].primary_election = new Date(dicts[i].primary_election);
@@ -117,8 +121,25 @@
         
         if((new Date()) < candidate.primary_election)
         {
-            document.getElementById('election').innerHTML = ['primary election is coming up',
+            document.getElementById('election').innerHTML = [
+                candidate.state, 'primary election is coming up',
                 candidate.primary_election.toLocaleDateString()].join(' ');
+        }
+        
+        if(candidate.reason == 'Redistricting') {
+            document.getElementById('reason').innerHTML = ['The',
+                candidate.chamber, 'will determine', candidate.state,
+                'district boundaries for 2021-2030, including U.S. Congressional',
+                'districts. A win by', candidate.name, 'helps a once-in-a-decade',
+                'chance to control redistricting.'].join(' ');
+        
+        } else if(candidate.reason == 'Senate Control') {
+            document.getElementById('reason').innerHTML = ['The U.S. Senate approves',
+            'judicial nominees and determines the makeup of the Supreme Court.',
+            'A win by', candidate.name, 'helps Democrats win the Senate.'].join(' ');
+        
+        } else {
+            document.getElementById('reason').style.display = 'none';
         }
         
         var phrase = ['the', candidate.state, candidate.chamber, 'in District', candidate.district].join(' '),
