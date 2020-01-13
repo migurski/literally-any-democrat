@@ -6,13 +6,46 @@
 <script src="{{ url_for('static', filename='code.js') }}"></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='writ.min.css') }}">
 <style>
-    body { margin: 4em 15% }
-    a { text-decoration: underline }
+
+    html
+    {
+        font-family: Georgia, Palatino, Lucida Bright, Book Antiqua, serif;
+    }
+    
+    a:link, a:visited
+    {
+        color: #2E327A;
+        background-color: rgba(255, 255, 255, .5);
+    }
+    
+    body
+    {
+        width: 100%;
+        background-color: #eee;
+        margin: 0 0 4em 0;
+    }
+
+    body>header
+    {
+        width: 100%;
+        margin: 0;
+        text-align: left;
+        overflow: hidden;
+    }
+    
+    header>img { max-width: none }
+    body>main { padding: 0 1rem }
+    
 </style>
 </head>
 <body>
 
-<h3>Literally Any Democrat in 2020</h3>
+<header>
+    <img alt="Literally Any Democrat 2020" src="{{ url_for('static', filename='header.png') }}" width="819" height="157">
+</header>
+
+<main>
+
 <p>
     So many Democrats are running for office in 2020! You can help take back
     the U.S. Senate or help fix legislature-controlled partisan gerrymandering
@@ -92,7 +125,8 @@
     candidates after primary elections happen in Spring and Summer 2020.
 </p>
 
-<table>
+<div style="overflow-x: auto; overflow-y: hidden">
+<table style="margin-bottom: 1px">
     <thead>
         <tr>
             <th>State</th>
@@ -114,6 +148,7 @@
         </tr>
     </tbody>
 </table>
+</div>
 
 <script language="javascript">
     load_candidates('{{candidates_url}}');
@@ -126,6 +161,8 @@
     <i>Literally Any Democrat</i> is a thing by Michal Migurski.
     <a href="https://github.com/migurski/literally-any-democrat/issues">Get in touch via Github Issues</a>.
 </p>
+
+</main>
 
 </body>
 </html>
