@@ -10,7 +10,7 @@ TZ = datetime.timezone(datetime.timedelta(hours=-12))
 Person = collections.namedtuple('Person', ('name', 'incumbent'))
 
 Candidate = collections.namedtuple('Candidate',
-    ('state', 'chamber', 'district', 'name', 'incumbent'))
+    ('state', 'chamber', 'district', 'name', 'incumbent', 'pronouns', 'donation_url'))
 
 State = collections.namedtuple('State', ('state', 'chamber', 'reason',
     'filing_deadline', 'primary_election', 'weight', 'detail_url'))
@@ -178,7 +178,8 @@ def load_candidates(url):
             candidates.append(Candidate(
                 row['State'], row['Chamber'],
                 parse_number(row['District']) if row['District'] else None,
-                person.name, person.incumbent
+                person.name, person.incumbent,
+                row['Pronouns'], row['Donations URL'],
                 ))
     
     return candidates

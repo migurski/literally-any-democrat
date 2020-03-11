@@ -75,6 +75,10 @@ function show_candidate(candidate)
     if(candidate.incumbent) {
         document.getElementById('verb').innerHTML = 'running as an incumbent';
 
+    } else if(candidate.pronouns) {
+        var possessive = candidate.pronouns.split('/')[1];
+        document.getElementById('verb').innerHTML = 'seeking '+possessive+' first term';
+
     } else {
         document.getElementById('verb').innerHTML = 'seeking their first term';
     }
@@ -110,9 +114,15 @@ function show_candidate(candidate)
         phrase = ['the', candidate.chamber, 'in', candidate.state].join(' ');
         search = [candidate.name, candidate.chamber, candidate.state].join(' ');
     }
+    
+    if(candidate.donation_url) {
+        document.getElementById('link').href = candidate.donation_url;
+
+    } else {
+        document.getElementById('link').href = 'https://www.google.com/search?q=support+campaign+' + escape(search);
+    }
 
     document.getElementById('race').innerHTML = phrase;
-    document.getElementById('link').href = 'https://www.google.com/search?q=support+campaign+' + escape(search);
     document.getElementById('candidate').style.display = 'block';
 }
 
